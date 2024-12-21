@@ -1,0 +1,34 @@
+name: Download and Upload Files from Issue
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  download-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Extract download link from issue
+      id: extract-link
+      run: |
+        ISSUE_BODY="${{ github.event.issue.body }}"
+        DOWNLOAD_LINK=$(echo "$ISSUE_BODY" | grep -oP '(?<=http://|https://)[^ ]+')
+        echo "::set-output name=download_link::https://$DOWNLOAD_LINK"
+
+    - name: Download file
+      run: |
+        DOWNLOAD_LINK="${{ steps.extract-link.outputs.download_link }}"
+        wget "$DOWNLOAD_LINK" -O downloaded_file
+
+    - name: Upload file to repository
+      run: |
+        mv downloaded_file ./downloaded_file
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add downloaded_file
+        git commit -m "Add downloaded file from issue #${{ github.event.issue.number }}"
+        git push
