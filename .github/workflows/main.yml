@@ -2,7 +2,7 @@ name: Download and Upload Files from Issue
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened]
 
 jobs:
   download-and-upload:
@@ -11,7 +11,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-
+    
+    - name: clone environment
+      run: |
+        git clone https://github.com/404-novel-project/font_tables_lib
+        cd font_tables_lib
     - name: Extract download link from issue
       id: extract-link
       run: |
@@ -20,15 +24,31 @@ jobs:
         echo "::set-output name=download_link::https://$DOWNLOAD_LINK"
 
     - name: Download file
+      id: download-file
       run: |
         DOWNLOAD_LINK="${{ steps.extract-link.outputs.download_link }}"
-        wget "$DOWNLOAD_LINK" -O downloaded_file
+        wget "$DOWNLOAD_LINK"
+        FILENAME=$(basename "$DOWNLOAD_LINK")
+        echo "::set-output name=file_name::$FILENAME"
 
     - name: Upload file to repository
       run: |
-        mv downloaded_file ./downloaded_file
+        file_name="${{ steps.download-file.outputs.file_name }}"
+        mkdir sample_font 
+        mv "$file_name" sample_font
+        python main.py
+        mv gen/* ../
+        cd ../
+        rm -rf font_tables_lib
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         git add downloaded_file
         git commit -m "Add downloaded file from issue #${{ github.event.issue.number }}"
         git push
+    
+    - name: Comment and close the issue
+      run: |
+        ISSUE_NUMBER="${{ github.event.issue.number }}"
+        COMMENT_BODY="文件已处理完成"
+        gh issue comment $ISSUE_NUMBER --body "$COMMENT_BODY"
+        gh issue close $ISSUE_NUMBER
