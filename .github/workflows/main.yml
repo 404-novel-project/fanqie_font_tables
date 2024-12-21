@@ -55,3 +55,6 @@ jobs:
         COMMENT_BODY="文件已处理完成"
         gh issue comment $ISSUE_NUMBER --body "$COMMENT_BODY"
         gh issue close $ISSUE_NUMBER
+      env:
+        GH_TOKEN: ${{ github.token }}
+
