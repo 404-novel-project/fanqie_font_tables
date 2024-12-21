@@ -36,6 +36,8 @@ jobs:
     - name: process font
       run: |
         cd font_tables_lib
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade Pillow
         pip install -r requirements.txt
         python main.py
         mv gen/* ../
