@@ -15,7 +15,7 @@ jobs:
     - name: clone environment
       run: |
         git clone https://github.com/404-novel-project/font_tables_lib
-        cd font_tables_lib
+
     - name: Extract download link from issue
       id: extract-link
       run: |
@@ -23,19 +23,21 @@ jobs:
         DOWNLOAD_LINK=$(echo "$ISSUE_BODY" | grep -oP '(?<=http://|https://)[^ ]+')
         echo "::set-output name=download_link::https://$DOWNLOAD_LINK"
 
-    - name: Download file
+    - name: Download font
       id: download-file
+      working-directory: font_tables_lib
       run: |
+        cd font_tables_lib
+        mkdir sample_font 
+        cd sample_font
         DOWNLOAD_LINK="${{ steps.extract-link.outputs.download_link }}"
         wget "$DOWNLOAD_LINK"
         FILENAME=$(basename "$DOWNLOAD_LINK")
         echo "::set-output name=file_name::$FILENAME"
 
-    - name: Upload file to repository
+    - name: process font
       run: |
-        file_name="${{ steps.download-file.outputs.file_name }}"
-        mkdir sample_font 
-        mv "$file_name" sample_font
+        cd font_tables_lib
         python main.py
         mv gen/* ../
         cd ../
