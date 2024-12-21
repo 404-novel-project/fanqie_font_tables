@@ -36,6 +36,7 @@ jobs:
     - name: process font
       run: |
         cd font_tables_lib
+        pip install -r requirements.txt
         python main.py
         mv gen/* ../
         cd ../
