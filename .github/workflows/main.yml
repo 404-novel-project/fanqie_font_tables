@@ -17,11 +17,11 @@ jobs:
         git clone https://github.com/404-novel-project/font_tables_lib
 
     - name: Extract download link from issue
-      id: extract-link
+      id: extract-links
       run: |
         ISSUE_BODY="${{ github.event.issue.body }}"
-        DOWNLOAD_LINK=$(echo "$ISSUE_BODY" | grep -oP '(?<=http://|https://)[^ ]+')
-        echo "::set-output name=download_link::https://$DOWNLOAD_LINK"
+        DOWNLOAD_LINKS=$(echo "$ISSUE_BODY" | grep -oP '(http|https)://[^ ]+')
+        echo "::set-output name=download_link::$DOWNLOAD_LINKS"
 
     - name: Download font
       id: download-file
@@ -29,9 +29,10 @@ jobs:
         cd font_tables_lib
         mkdir sample_font 
         cd sample_font
-        DOWNLOAD_LINK="${{ steps.extract-link.outputs.download_link }}"
-        wget "$DOWNLOAD_LINK"
-        FILENAME=$(basename "$DOWNLOAD_LINK")
+        DOWNLOAD_LINKS="${{ steps.extract-links.outputs.download_links }}"
+        for LINK in $DOWNLOAD_LINKS; do
+          wget "$LINK"
+        done
 
     - name: process font
       run: |
